@@ -1,0 +1,15 @@
+{
+  "name": "pokedraft-shared",
+  "version": "1.0.0",
+  "description": "shared ts code for frontend and backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "pokemon",
+    "draft"
+  ],
+  "author": "Tom Pillokat",
+  "license": "ISC"
+}
