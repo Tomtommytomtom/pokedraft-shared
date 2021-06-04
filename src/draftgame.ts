@@ -139,7 +139,7 @@ export interface DraftGame {
   rules: Rules
 }
 
-export const createDraftGame = (): DraftGame => ({
+export const createDraftGame = (rules: Rules): DraftGame => ({
   [Player.One]: {
     picks: [],
     bans: []
@@ -150,5 +150,5 @@ export const createDraftGame = (): DraftGame => ({
   },
   turnNumber: 0,
   history: [],
-  rules: createStandardRules()
+  rules
 })
