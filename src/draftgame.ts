@@ -121,7 +121,7 @@ export const createStandardRules = () => ({
   timer: 100
 })
 
-interface DraftGame {
+export interface DraftGame {
   [Player.One]: {
     picks: Pokemon[],
     bans: Pokemon[]
