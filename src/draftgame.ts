@@ -123,11 +123,25 @@ export const createStandardRules = () => ({
 
 export interface IDraftGame {
   turnNumber: number,
-  history: {
-    player: Player,
-    action: Action,
-    pokemon: Pokemon
-  }[],
+  [Player.One]: {
+    [Action.Pick]: Pokemon[],
+    [Action.Ban]: Pokemon[]
+  },
+  [Player.Two]: {
+    [Action.Pick]: Pokemon[],
+    [Action.Ban]: Pokemon[]
+  },
+  allowed: {
+    [Player.One]: {
+      [Action.Pick]: SmogonTier[],
+      [Action.Ban]: SmogonTier[]
+    },
+    [Player.Two]: {
+      [Action.Pick]: SmogonTier[],
+      [Action.Ban]: SmogonTier[]
+    },
+  }
+  history: Turn[],
   rules: Rules
 }
 
@@ -302,5 +316,31 @@ export class DraftGame {
 
   public isDone = () => {
     return this.history.length === this.rules.pickPattern.length
+  }
+
+  private getPokemons = (a: Action,p: Player) => {
+    return this.history.filter(t => t.action === a && t.player === p).map(t => t?.pokemon) as Pokemon[]
+  }
+
+  public serialize = (): IDraftGame => {
+    const playerOnePicks = this.getPokemons(Action.Pick, Player.One)
+    const playerOneBans = this.getPokemons(Action.Ban, Player.One)
+    const playerTwoPicks = this.getPokemons(Action.Pick, Player.Two)
+    const playerTwoBans = this.getPokemons(Action.Ban, Player.Two)
+
+    return {
+      turnNumber: this.turnNumber,
+      [Player.One]: {
+        [Action.Ban]: playerOneBans,
+        [Action.Pick]: playerOnePicks,
+      },
+      [Player.Two]: {
+        [Action.Ban]: playerTwoBans,
+        [Action.Pick]: playerTwoPicks,
+      },
+      allowed: this.allowed,
+      history: this.history,
+      rules: this.rules
+    }
   }
 }
