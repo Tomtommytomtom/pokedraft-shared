@@ -1,4 +1,4 @@
-import { Pokemon, SmogonTier } from "./pokemon/pokemon"
+import { Pokemon, SmogonTier, mapStringToTier, stringTier } from "./pokemon/pokemon"
 
 export enum Player {
   One = "PLAYER_1",
@@ -121,15 +121,7 @@ export const createStandardRules = () => ({
   timer: 100
 })
 
-export interface DraftGame {
-  [Player.One]: {
-    picks: Pokemon[],
-    bans: Pokemon[]
-  },
-  [Player.Two]: {
-    picks: Pokemon[],
-    bans: Pokemon[]
-  },
+export interface IDraftGame {
   turnNumber: number,
   history: {
     player: Player,
@@ -139,16 +131,176 @@ export interface DraftGame {
   rules: Rules
 }
 
-export const createDraftGame = (rules: Rules): DraftGame => ({
-  [Player.One]: {
-    picks: [],
-    bans: []
-  },
-  [Player.Two]: {
-    picks: [],
-    bans: []
-  },
-  turnNumber: 0,
-  history: [],
-  rules
-})
+export class InvalidTurnError extends Error {
+  constructor(turn: Turn){
+    super()
+    this.message = `InvalidTurn: ${turn.player} ${turn.action}`
+  }
+}
+
+export class NoPokemonError extends InvalidTurnError {
+  constructor(turn: Turn){
+    super(turn)
+    this.message += `NoPokemon: No Pokemon has been picked or banned`
+  }
+}
+
+
+export class PokemonBannedError extends InvalidTurnError {
+  constructor(turn: Turn){
+    super(turn)
+    this.message = `PokemonBanned: ${turn?.pokemon} has been banned`
+  }
+}
+
+export class PokemonPickedError extends InvalidTurnError {
+  constructor(turn: Turn){
+    super(turn)
+    this.message = `PokemonPicked: ${turn?.pokemon} has already been picked`
+  }
+}
+
+export class InvalidActionError extends InvalidTurnError {
+  constructor(turn: Turn, actualTurn: Turn){
+    super(turn)
+    this.message += `-> InvalidAction: ${actualTurn.player} tried to ${actualTurn.action}, not ${turn.action}`
+  }
+}
+
+export class InvalidPlayerError extends InvalidTurnError {
+  constructor(turn: Turn, actualTurn: Turn){
+    super(turn)
+    this.message += `-> InvalidPlayer: expected player to make a move ${turn.player}, actual player that tried ${actualTurn.player}`
+  }
+}
+
+export class InvalidTierError extends InvalidTurnError {
+  constructor(turn: Turn, allowed: SmogonTier[]){
+    super(turn)
+    this.message = `InvalidTierError ${turn.pokemon?.name} from tier ${mapStringToTier(turn.pokemon?.smogonTier as stringTier)} not allowed, allowed: ${allowed}`
+  }
+}
+
+export class DraftGame {
+  public history: Turn[] = [];
+  public turnNumber: number = 0
+
+  public allowed: {
+    [Player.One]: {
+      [Action.Ban]: SmogonTier[],
+      [Action.Pick]: SmogonTier[]
+    },
+    [Player.Two]: {
+      [Action.Ban]: SmogonTier[],
+      [Action.Pick]: SmogonTier[]
+    },
+  }
+
+  private rules: Rules
+  constructor(rules: Rules){
+    this.rules = rules
+    this.allowed = {
+      [Player.One]: {
+        [Action.Pick]: [...rules.allowedPicks],
+        [Action.Ban]: [...rules.allowedPicks],
+      },
+      [Player.Two]: {
+        [Action.Pick]: [...rules.allowedPicks],
+        [Action.Ban]: [...rules.allowedPicks],
+      }
+    }
+  }
+
+  private getBans = (): Pokemon[] => {
+    return this.history.filter(turn => turn.action === Action.Ban).map(turn => turn?.pokemon) as Pokemon[]
+  }
+
+  private getPicks = (): Pokemon[] => {
+    return this.history.filter(turn => turn.action === Action.Pick).map(turn => turn?.pokemon) as Pokemon[]
+  }
+
+  private hasPokemonBeenBanned = (pokemon: Pokemon) => {
+    return this.getBans().includes(pokemon)
+  }
+
+  private hasPokemonBeenPicked = (pokemon: Pokemon) => {
+    return this.getPicks().includes(pokemon)
+  }
+
+  private getAllowedRef = (turn: Turn) => {
+    return this.allowed[turn.player][turn.action]
+  }
+
+  private isValidPickOrBan = (turn: Turn) => {
+    const pokemon = turn.pokemon as Pokemon
+    const action = turn.action    
+    if(this.hasPokemonBeenBanned(pokemon)){
+      throw new PokemonBannedError(turn)
+    }
+    if(this.hasPokemonBeenPicked(pokemon)){
+      throw new PokemonPickedError(turn)
+    }
+    if(!this.isValidTier(turn)){
+      return false
+    }
+    return true
+  }
+
+  private isValidTier = (turn: Turn) => {
+    const tier = mapStringToTier(turn.pokemon?.smogonTier as stringTier)
+    const allowed = this.getAllowedRef(turn)
+    if(allowed.some(t => t >= tier)){
+      return true
+    } else {
+      throw new InvalidTierError(turn,allowed)
+    }
+  }
+
+  private indexOfSmallestTier = (turn: Turn) => {
+    const tier = mapStringToTier(turn.pokemon?.smogonTier as stringTier)
+    const allowed = this.getAllowedRef(turn)
+    let resultIndex = -1;
+    for(let i = 0; i < allowed.length; i++){
+      if(allowed[i] < allowed[resultIndex] && allowed[i] >= tier){
+        resultIndex = i
+      }
+    }
+    return resultIndex
+  }
+
+
+  public isValidTurn = (turn: Turn): boolean =>  {
+    const turnNumber = this.turnNumber
+    console.log(turnNumber)
+    const nextTurn = this.rules.pickPattern[turnNumber]
+    console.log(nextTurn, turn)
+    if(turn.action !== nextTurn.action){
+      throw new InvalidActionError(nextTurn,turn)
+    }
+    if(turn.player !== nextTurn.player){
+      throw new InvalidPlayerError(nextTurn,turn)
+    }
+    if(!turn.pokemon){
+      throw new NoPokemonError(turn)
+    }
+    if(this.isValidPickOrBan(turn)){
+      return true
+    }
+    return false
+  }
+
+  public doTurn = (turn: Turn) => {
+    if(!this.isValidTurn(turn)){
+      return false
+    }
+    this.history.push(turn)
+    const index = this.indexOfSmallestTier(turn)
+    this.getAllowedRef(turn).splice(index,1)
+    this.turnNumber = this.turnNumber + 1;
+    return true
+  }
+
+  public isDone = () => {
+    return this.history.length === this.rules.pickPattern.length
+  }
+}
