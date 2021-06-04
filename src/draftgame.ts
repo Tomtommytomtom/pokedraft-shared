@@ -285,9 +285,7 @@ export class DraftGame {
 
   public isValidTurn = (turn: Turn): boolean =>  {
     const turnNumber = this.turnNumber
-    console.log(turnNumber)
     const nextTurn = this.rules.pickPattern[turnNumber]
-    console.log(nextTurn, turn)
     if(turn.action !== nextTurn.action){
       throw new InvalidActionError(nextTurn,turn)
     }
