@@ -5,12 +5,12 @@ export enum Player {
   Two = "PLAYER_2"
 }
 
-const playerMapping = { 
+export const playerMapping = { 
   [Player.One]: 'Player 1',
   [Player.Two]: 'Two'
 }
 
-const playerToText = (p: Player) => {
+export const playerToText = (p: Player) => {
 return playerMapping[p]
 }
 
@@ -20,7 +20,7 @@ export enum Action {
   Ban = "ACTION_BAN"
 }
 
-const actionMapping = {
+export const actionMapping = {
     [Action.Pick]: {
       noun: 'Pick',
       verbPast: 'picked'
@@ -31,7 +31,7 @@ const actionMapping = {
     },
   }
 
-const actionToText = (a: Action) => {
+export const actionToText = (a: Action) => {
   return actionMapping[a].verbPast
 }
 
@@ -83,7 +83,7 @@ export const defaultTurnOrder: string[] = [
 
 export const turns = defaultTurnOrder.map(t => turnMapping[t])
 
-const createArrayIndexReducer = <T>(isCondition: (element: T) => boolean) => (arr: number[], element: T, index: number) => {
+export const createArrayIndexReducer = <T>(isCondition: (element: T) => boolean) => (arr: number[], element: T, index: number) => {
   if(isCondition(element)){
     return arr.concat(index)
   } else {
@@ -107,13 +107,13 @@ export const turnToText = (turn: Turn) => {
   return [playerToText(turn.player),actionToText(turn.action),turn.pokemon?.name].join(" ")
 }
 
-interface Rules {
+export interface Rules {
   pickPattern: Turn[],
   allowedPicks: [SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier],
   timer: number,
 }
 
-const allowedPicks = new Array(6).fill(SmogonTier.OU) as [SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier]
+export const allowedPicks = new Array(6).fill(SmogonTier.OU) as [SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier,SmogonTier]
 
 export const createStandardRules = () => ({
   pickPattern: defaultTurnOrder.map(t => turnMapping[t]),
