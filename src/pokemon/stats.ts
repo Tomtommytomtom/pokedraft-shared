@@ -38,7 +38,7 @@ export const statsMapping: Record<keyof Stats,any> = {
   }
 } 
 
-export const getStatColor = (value) => {
+export const getStatColor = (value: number) => {
   if(value < 40){
     return '#cc0000'
   }

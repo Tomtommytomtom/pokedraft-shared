@@ -124,11 +124,11 @@ const weaknessChart: Record<PokemonType,Effectiveness[]> = ({
   [PokemonType.Fairy]:     [ 1, 2, 1,.5, 1, 1, 1, 1,.5,.5, 1, 1, 1, 1, 1, 2, 2, 1],
 })                        //No,Fi,Fl,Po,Gr,Ro,Bu,Gh,St,Fi,Wa,Gr,El,Ps,Ic,Dr,Da,Fa
 
-export const calculateWeaknesses = (types: PokemonType[]): Record<PokemonType,WeaknessValue> => {
-  let result = {} as Record<PokemonType,WeaknessValue>
+export const calculateWeaknesses = (types: PokemonType[]): Record<PokemonType,Weakness> => {
+  let result = {} as Record<PokemonType,Weakness>
   Object.entries(weaknessChart).forEach(([type, row]: [string,Effectiveness[]]) => {
     const indices = types.map((t) => order.indexOf(t))
-    result[type as PokemonType] = indices.reduce((res, i) => res * row[i],1 as number) as WeaknessValue
+    result[type as PokemonType] = indices.reduce((res, i) => res * row[i],1 as number) as Weakness
   })
   return result
 }

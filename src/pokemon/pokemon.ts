@@ -1,9 +1,8 @@
-import pokemons from "../dex.json"
 import { PokemonType } from "./type"
 import { Stats } from "./stats"
 import { numberEnumKeys, numberEnumValues } from "../enum-helpers"
 
-interface Ability {
+export interface Ability {
   0: string;
   1?: string;
   H?: string
@@ -89,6 +88,3 @@ export interface Pokemon {
   smogonTier: string
   stats: Stats
 }
-
-
-export default pokemons as Pokemon[] 

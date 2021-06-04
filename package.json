@@ -2,14 +2,21 @@
   "name": "pokedraft-shared",
   "version": "1.0.0",
   "description": "shared ts code for frontend and backend",
-  "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepare": "npm run build",
+    "build": "tsc"
   },
   "keywords": [
     "pokemon",
     "draft"
   ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": ["lib/**/*"],
   "author": "Tom Pillokat",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^4.3.2"
+  }
 }
